@@ -86,7 +86,7 @@ const updateMovie = async (
 
     return response.status(200).json(queryResult.rows[0]);
   } catch (error) {
-    return response.status(404).json({ message: "Not Found" });
+    return response.status(409).json({ message: "Movie already exists" });
   }
 };
 

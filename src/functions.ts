@@ -1,21 +1,48 @@
 import { Request, Response } from "express";
 import { QueryConfig } from "pg";
 import { client } from "./database";
-import { iMovies, iMoviesResult } from "./interfaces";
+import { iMovies, iMoviesResult, Pagination } from "./interfaces";
 
 const readMovies = async (
   request: Request,
   response: Response
 ): Promise<Response> => {
+
+    let page = Number(request.query.page) || 1;
+    let perPage = Number(request.query.perPage) || 5;  
+
   const queryString: string = `
     SELECT
         *
     FROM 
         movies
+    LIMIT $1 OFFSET $2
     `;
-  const queryResult: iMoviesResult = await client.query(queryString);
+    
+    const baseUrl: string = `http://localhost:3000/movies`
+    let prevPage: string | null = `${baseUrl}?page=${page - 1}&perPage=${perPage}`
+    let nextPage: string  | null = `${baseUrl}?page=${page + 1}&perPage=${perPage}`
 
-  return response.status(200).json(queryResult.rows);
+    
+    const queryConfig: QueryConfig = {
+        text: queryString,
+        values: [perPage, perPage * (page - 1)],
+    };
+
+    const queryResult: iMoviesResult = await client.query(queryConfig);
+    
+    const pagenation: Pagination = {
+        prevPage,
+        nextPage,
+        count: queryResult.rowCount,
+        data: queryResult.rows,
+    }
+
+    if(pagenation.count === 0){
+        return response.status(404).json({message: "Page not found!"})
+    }
+
+  return response.status(200).json(pagenation);
 };
 
 const insertMovie = async (
@@ -107,7 +134,7 @@ const deleteMovie = async (
     text: queryString,
     values: [id],
   };
-  await client.query(queryConfig)
+  await client.query(queryConfig);
   return response.status(204).send();
 };
 

@@ -7,6 +7,13 @@ interface iMovies {
   price: number;
 }
 
+interface Pagination {
+  prevPage: string;
+  nextPage: string;
+  count: number;
+  data: iMovies[];
+}
+
 type iMoviesResult = QueryResult<iMovies>
 
-export {iMovies, iMoviesResult}
+export {iMovies, iMoviesResult, Pagination}

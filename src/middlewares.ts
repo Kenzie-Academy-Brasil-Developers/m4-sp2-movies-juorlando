@@ -29,30 +29,4 @@ const ensureMovieExist =async (request:Request, response: Response, next: NextFu
     return next()
 }
 
-// const ensureMovieExistByName =async (request:Request, response: Response, next: NextFunction): Promise<Response | void> => {
-//     const name: string = request.body.name
-
-//     const queryString: string = `
-//     SELECT
-//         *
-//     FROM
-//         movies
-//     WHERE
-//         name = $1
-//     `
-
-//     const queryConfig: QueryConfig = {
-//         text: queryString,
-//         values: [name]
-//     }
-
-//     const queryResult: iMoviesResult = await client.query(queryConfig)
-
-//     if(queryResult) {
-//         response.status(409).json({messgae: "Movie already exists."})
-//     }
-
-//     return next()
-// }
-
 export {ensureMovieExist}

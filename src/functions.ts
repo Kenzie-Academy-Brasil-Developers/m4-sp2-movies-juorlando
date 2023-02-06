@@ -7,9 +7,8 @@ const readMovies = async (
   request: Request,
   response: Response
 ): Promise<Response> => {
-
-    let page = Number(request.query.page) || 1;
-    let perPage = Number(request.query.perPage) || 5;  
+  let page = Number(request.query.page) || 1;
+  let perPage = Number(request.query.perPage) || 5;
 
   const queryString: string = `
     SELECT
@@ -18,29 +17,32 @@ const readMovies = async (
         movies
     LIMIT $1 OFFSET $2
     `;
-    
-    const baseUrl: string = `http://localhost:3000/movies`
-    let prevPage: string | null = `${baseUrl}?page=${page - 1}&perPage=${perPage}`
-    let nextPage: string  | null = `${baseUrl}?page=${page + 1}&perPage=${perPage}`
 
-    
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [perPage, perPage * (page - 1)],
-    };
+  const baseUrl: string = `http://localhost:3000/movies`;
+  let prevPage: string | null = `${baseUrl}?page=${
+    page - 1
+  }&perPage=${perPage}`;
+  let nextPage: string | null = `${baseUrl}?page=${
+    page + 1
+  }&perPage=${perPage}`;
 
-    const queryResult: iMoviesResult = await client.query(queryConfig);
-    
-    const pagenation: Pagination = {
-        prevPage,
-        nextPage,
-        count: queryResult.rowCount,
-        data: queryResult.rows,
-    }
+  const queryConfig: QueryConfig = {
+    text: queryString,
+    values: [perPage, perPage * (page - 1)],
+  };
 
-    if(pagenation.count === 0){
-        return response.status(404).json({message: "Page not found!"})
-    }
+  const queryResult: iMoviesResult = await client.query(queryConfig);
+
+  const pagenation: Pagination = {
+    prevPage,
+    nextPage,
+    count: queryResult.rowCount,
+    data: queryResult.rows,
+  };
+
+  if (pagenation.count === 0) {
+    return response.status(404).json({ message: "Page not found!" });
+  }
 
   return response.status(200).json(pagenation);
 };
@@ -74,8 +76,18 @@ const insertMovie = async (
     const queryResult: iMoviesResult = await client.query(queryConfig);
 
     return response.status(201).json(queryResult.rows[0]);
-  } catch (error) {
-    return response.status(409).json({ message: "Movie already exists" });
+  } catch (error: any) {
+    if (
+      error.message.includes("duplicate key value violates unique constraint")
+    ) {
+      return response.status(409).json({
+        message: "Movie already exists!",
+      });
+    }
+    console.log(error);
+    return response.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
 
@@ -112,8 +124,18 @@ const updateMovie = async (
     const queryResult: iMoviesResult = await client.query(queryConfig);
 
     return response.status(200).json(queryResult.rows[0]);
-  } catch (error) {
-    return response.status(409).json({ message: "Movie already exists" });
+  } catch (error: any) {
+    if (
+      error.message.includes("duplicate key value violates unique constraint")
+    ) {
+      return response.status(409).json({
+        message: "Movie already exists!",
+      });
+    }
+    console.log(error);
+    return response.status(500).json({
+      message: "Internal server error",
+    });
   }
 };
 

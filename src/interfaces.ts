@@ -8,8 +8,8 @@ interface iMovies {
 }
 
 interface Pagination {
-  prevPage: string;
-  nextPage: string;
+  prevPage: string | null;
+  nextPage: string | null;
   count: number;
   data: iMovies[];
 }

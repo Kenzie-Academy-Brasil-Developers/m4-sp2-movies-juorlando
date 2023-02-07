@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { QueryConfig } from "pg";
+import { QueryConfig, QueryResult } from "pg";
 import { client } from "./database";
 import { iMovies, iMoviesResult, Pagination } from "./interfaces";
 
@@ -18,6 +18,19 @@ const readMovies = async (
     LIMIT $1 OFFSET $2
     `;
 
+  const queryCount: string = `
+    SELECT 
+        COUNT(*)
+    FROM
+        movies
+    WHERE
+        id > 0
+    `;
+
+  const queryCountResult: any = await client.query(queryCount);
+
+  const countResult = queryCountResult.rows[0].count;
+
   const baseUrl: string = `http://localhost:3000/movies`;
   let prevPage: string | null = `${baseUrl}?page=${
     page - 1
@@ -32,6 +45,14 @@ const readMovies = async (
   };
 
   const queryResult: iMoviesResult = await client.query(queryConfig);
+
+  perPage * page >= countResult
+    ? (nextPage = null)
+    : (nextPage = `${baseUrl}?page=${page - 1}&perPage=${perPage}`);
+
+  page === 1
+    ? (prevPage = null)
+    : (prevPage = `${baseUrl}?page=${page - 1}&perPage=${perPage}`);
 
   const pagenation: Pagination = {
     prevPage,

@@ -4,7 +4,7 @@ import { client } from "./database";
 import { iMoviesResult } from "./interfaces";
 
 const ensureMovieExist =async (request:Request, response: Response, next: NextFunction): Promise<Response | void> => {
-    
+
     const id: number = parseInt(request.params.id)
 
     const queryString: string = `

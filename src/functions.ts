@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { QueryConfig, QueryResult } from "pg";
+import format from "pg-format";
 import { client } from "./database";
 import { iMovies, iMoviesResult, Pagination } from "./interfaces";
 
@@ -160,6 +161,52 @@ const updateMovie = async (
   }
 };
 
+const updateMoviePartial = async (
+  request: Request,
+  response: Response
+): Promise<Response | void> => {
+  try {
+    const id: number = parseInt(request.params.id);
+    const movieData = Object.values(request.body);
+    const movieKeys = Object.keys(request.body);
+
+    const queryString: string = format(
+      `
+              UPDATE 
+                  movies
+              SET (%I) = ROW (%L)
+              WHERE
+                  id = $1
+              RETURNING 
+                  *;
+              `,
+      movieKeys,
+      movieData
+    );
+
+    const queryConfig: QueryConfig = {
+      text: queryString,
+      values: [id],
+    };
+
+    const queryResult: iMoviesResult = await client.query(queryConfig);
+
+    return response.status(200).json(queryResult.rows[0]);
+  } catch (error: any) {
+    if (
+      error.message.includes("duplicate key value violates unique constraint")
+    ) {
+      return response.status(409).json({
+        message: "Movie already exists!",
+      });
+    }
+    console.log(error);
+    return response.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 const deleteMovie = async (
   request: Request,
   response: Response
@@ -181,4 +228,10 @@ const deleteMovie = async (
   return response.status(204).send();
 };
 
-export { readMovies, insertMovie, updateMovie, deleteMovie };
+export {
+  readMovies,
+  insertMovie,
+  updateMovie,
+  updateMoviePartial,
+  deleteMovie,
+};
